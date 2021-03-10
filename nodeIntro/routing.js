@@ -12,7 +12,8 @@ const server = http.createServer((req, res) => {
         res.end('this is a body')
     } else {
         res.writeHead(404, {
-                'Content-type': 'text/html'
+                'Content-type': 'text/html',
+                'my-own-header': 'hello-world'
             }) //writhead also sends a header
         res.end('<h1>page not found</h1>')
     }
