@@ -2,21 +2,16 @@
 const fs = require('fs')
 const http = require('http')
 const url = require('url')
+const data = fs.readFileSync('./L-13.json', 'utf-8') //this does not have call back function 
+const dataObj = JSON.parse(data)
 const server = http.createServer((req, res) => {
     const pathName = req.url
     if (pathName === '/api') {
-        fs.readFile('./L-13.json', 'utf-8', (err, data) => {
-            const productData = JSON.parse(data)
-                // console.log(productData)
-            const myInfo = productData[0].description
-                // res.writeHead('200', { 'Content-type': 'application/json' })
-                // res.end(data)
-                // res.end(productData)
-            console.log(myInfo)
-            res.end(myInfo)
-        })
+        res.writeHead('200', { 'Content-type': 'application/json' })
+        res.end(data)
     }
 })
 server.listen(8000, '127.0.0.1', () => {
-    console.log('server is connected')
-})
+        console.log('server is connected')
+    })
+    //when you making request every time this code execute so make this synchronously
