@@ -1,35 +1,42 @@
 const fs = require('fs')
 const http = require('http')
 const url = require('url')
-const data = fs.readFileSync('./dev-data/data.json', 'utf-8')
+const { runInNewContext } = require('vm')
+const tempOverview = fs.readFileSync(`${__dirname}/templates/overview.html`, 'utf-8')
+const tempProduct = fs.readFileSync(`${__dirname}/templates/product.html`, 'utf-8')
+const tempCard = fs.readFileSync(`${__dirname}/templates/figure.html`, 'utf-8')
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8')
 const dataObj = JSON.parse(data)
-
-const overview = fs.readFileSync('./templates/overview.html', 'utf-8')
-const figure = fs.readFileSync('./templates/figure.html', 'utf-8')
-const product = fs.readFileSync('./templates/product.html')
-
-
+const replaceTemplates = (temp, product) => {
+    let output = temp.replace(/{%productName%}/g, product.productName)
+    output = output.replace(/{%image%}/g, product.image)
+    output = output.replace(/{%productPrice%}/g, product.price)
+    output = output.replace(/{%productFrom%}/g, product.from)
+    output = output.replace(/{%productQuantity%}/g, product.qunatity)
+    output = output.replace(/{%productNutrients%}/g, product.nutrients)
+    output = output.replace(/{%productDesciption%}/g, product.description)
+    output = output.replace(/{%ID%}/g, product.id)
+    if (!product.organic) output = output.replace(/{%NOT_ORGANIC%}/g, 'not-organic')
+    return output
+}
 const server = http.createServer((req, res) => {
-    const pathName = req.url
-
-    //overview pag
-    if (pathName === '/' || pathName === "/overview") {
-        res.writeHead('200', { 'Content-type': 'text/html' })
-        res.end(overview)
-    } else if (pathName === '/product') {
-        res.end('this is the product')
-    } else if (pathName === '/api') {
-        res.writeHead(200, { 'Content-type': 'application/json' })
-            // console.log(dataObj)
-        res.end(data)
-    } else {
-        res.writeHead('404', {
-            'Content-type': 'text/html',
-            'my-own-header': 'hello-world'
-        })
-        res.end('<h1>Page not found !</h1>')
+    const { query, pathname } = url.parse(req.url, true)
+    console.log(query)
+    console.log(pathname)
+    if (pathname === '/' || pathname === '/overview') {
+        res.writeHead(200, { 'Content-type': 'text/html' })
+        const cardsHtml = dataObj.map(el => replaceTemplates(tempCard, el)).join('')
+        const output = tempOverview.replace('{%PRODUCT_CARDS%}', cardsHtml)
+        res.end(output)
+    } else if (pathname === '/product') {
+        res.writeHead(200, { 'Content-type': 'text/html' })
+        const product = dataObj[query.id]
+        const output = replaceTemplates(tempProduct, product)
+        res.end(output)
     }
+
 })
+
 server.listen(8000, '127.0.0.1', () => {
-    console.log('server is connected  hurray')
+    console.log('ur server is connects')
 })
